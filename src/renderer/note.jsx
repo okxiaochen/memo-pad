@@ -98,7 +98,7 @@ const Note = () => {
     const [backgroundColor, setBackgroundColor] = useState('rgba(255, 235, 59, 1.0)');
     const [opacity, setOpacity] = useState(1.0);
     const [alwaysOnTop, setAlwaysOnTop] = useState(true);
-    // 暂时移除 clickThrough 状态
+    // Temporarily removed clickThrough state
     
     const saveTimeoutRef = useRef(null);
     const noteContainerRef = useRef(null);
@@ -112,7 +112,7 @@ const Note = () => {
             try {
                 console.log('Initializing note...');
                 
-                // Get note ID from URL parameters - 直接使用 window.location.search
+                // Get note ID from URL parameters - directly use window.location.search
                 const urlParams = new URLSearchParams(window.location.search);
                 console.log('URL params:', urlParams);
                 
@@ -132,7 +132,7 @@ const Note = () => {
                         setBackgroundColor(existingNote.backgroundColor);
                         setOpacity(existingNote.opacity);
                         setAlwaysOnTop(existingNote.alwaysOnTop);
-                        // 暂时移除 clickThrough 设置
+                        // Temporarily removed clickThrough setting
                     } else {
                         console.log('Note not found, creating new note...');
                         // Note not found, create a new one
@@ -203,7 +203,7 @@ const Note = () => {
                 backgroundColor: backgroundColor,
                 opacity: parseFloat(opacity),
                 alwaysOnTop: alwaysOnTop,
-                // 暂时移除 clickThrough
+                // Temporarily removed clickThrough
             };
             
             console.log('Saving note with updates:', updates);
@@ -219,11 +219,11 @@ const Note = () => {
         } catch (error) {
             console.error('Failed to save note:', error);
         }
-    }, [content, backgroundColor, opacity, alwaysOnTop]); // 移除 clickThrough 依赖
+    }, [content, backgroundColor, opacity, alwaysOnTop]); // Removed clickThrough dependency
 
     // Auto-save when content changes
     useEffect(() => {
-        if (!currentNote) return; // 没有 currentNote 不自动保存
+        if (!currentNote) return; // No currentNote, don't auto-save
         
         // Only save if content actually changed
         if (content === currentNote.content) return;
@@ -252,7 +252,7 @@ const Note = () => {
             backgroundColor !== currentNote.backgroundColor ||
             opacity !== currentNote.opacity ||
             alwaysOnTop !== currentNote.alwaysOnTop;
-            // 暂时移除 clickThrough 检查
+            // Temporarily removed clickThrough check
             
         if (!hasSettingsChanged) return;
         
@@ -335,7 +335,7 @@ const Note = () => {
                     backgroundColor: backgroundColor,
                     opacity: parseFloat(opacity),
                     alwaysOnTop: alwaysOnTop,
-                    // 暂时移除 clickThrough
+                    // Temporarily removed clickThrough
                 };
                 
                 console.log('Force saving note with updates:', updates);
@@ -385,7 +385,7 @@ const Note = () => {
                         backgroundColor: backgroundColor,
                         opacity: parseFloat(opacity),
                         alwaysOnTop: alwaysOnTop,
-                        // 暂时移除 clickThrough
+                        // Temporarily removed clickThrough
                     };
                     
                     console.log('Force saving note with updates:', updates);
@@ -503,7 +503,7 @@ const Note = () => {
                         onChange={handleContentChange}
                         disabled={!currentNote}
                     />
-                    {!currentNote && <div style={{color: '#888', marginTop: 8}}>正在加载...</div>}
+                    {!currentNote && <div style={{color: '#888', marginTop: 8}}>Loading...</div>}
                 </div>
             )}
             {showSettings && (
@@ -553,7 +553,7 @@ const Note = () => {
                         </div>
                     </div>
                     
-                    {/* 暂时移除 click-through 设置 */}
+                    {/* Temporarily removed click-through setting */}
                 </div>
             )}
         </div>

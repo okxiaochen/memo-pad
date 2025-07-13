@@ -187,7 +187,7 @@ function createNoteWindow(note: Note): BrowserWindow {
     noteWindow.setOpacity(note.opacity)
   })
 
-  // 暂时禁用 click-through 功能
+  // Temporarily disabled click-through functionality
   // if (note.clickThrough) {
   //   noteWindow.setIgnoreMouseEvents(true, { forward: true })
   // }
@@ -266,7 +266,7 @@ ipcMain.handle('create-note', (event, noteData: Partial<Note>) => {
     content: noteData.content || '',
     backgroundColor: noteData.backgroundColor || store.get('settings.defaultBackgroundColor'),
     opacity: noteData.opacity !== undefined ? noteData.opacity : 0.8, // Default to 0.8 for new notes
-    clickThrough: false, // 暂时禁用 click-through
+    clickThrough: false, // Temporarily disabled click-through
     alwaysOnTop: noteData.alwaysOnTop !== undefined ? noteData.alwaysOnTop : store.get('settings.defaultAlwaysOnTop'),
     position: smartPosition,
     size: defaultSize,
@@ -321,7 +321,7 @@ ipcMain.handle('update-note', (event, noteId: string, updates: Partial<Note>) =>
       // This just updates the stored opacity value
       console.log(`Updating stored opacity for note ${noteId}: ${updates.opacity}`)
     }
-    // 暂时禁用 click-through 功能
+    // Temporarily disabled click-through functionality
     // if (updates.clickThrough !== undefined) {
     //   console.log(`Setting clickThrough for note ${noteId}: ${updates.clickThrough}`)
     //   window.setIgnoreMouseEvents(updates.clickThrough, { forward: true })

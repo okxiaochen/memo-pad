@@ -2,39 +2,42 @@
 
 ![Markies Logo](https://via.placeholder.com/150x50/667eea/ffffff?text=Markies)
 
-Markies is a powerful, modern alternative to the built-in macOS Stickies app. It provides floating notes with markdown support, advanced window management, and a beautiful dashboard interface.
+Markies is a powerful, modern alternative to the built-in macOS Stickies app. It provides floating notes with advanced window management, group organization, and a beautiful dashboard interface.
 
 ## ✨ Features
 
 ### 🗒️ Enhanced Note Taking
-- **Floating Notes**: Each note floats on top of other windows (customizable)
-- **Markdown Support**: Write in Markdown with live preview
+- **Floating Notes**: Each note floats on top of other windows
 - **Custom Colors**: Set unique background colors for each note
-- **Transparency**: Adjustable opacity for each note
-- **Click-Through**: Optional click-through functionality
+- **Transparency**: Adjustable opacity (80% default) for each note
+- **Auto-save**: Notes save automatically as you type
+- **Position Memory**: Notes remember their position and size
 
 ### 🎛️ Window Management
 - **Always on Top**: Keep notes visible while working
-- **Expand/Collapse All**: Quickly manage all notes at once
-- **Position Memory**: Notes remember their position and size
-- **Responsive Design**: Beautiful UI that adapts to different screen sizes
+- **Collapse/Expand**: Collapse notes to just the title bar
+- **Collapse All/Expand All**: Quickly manage all notes at once
+- **Rearrange**: Automatically arrange all visible notes
+- **Reposition**: Restore original positions and collapse states
 
 ### 📁 Organization
 - **Groups**: Organize notes into color-coded groups
 - **Drag & Drop**: Easily move notes between groups
-- **Search**: Find notes quickly (coming soon)
-- **Layouts**: Save and restore different note arrangements
+- **Ungrouped Notes**: Notes without groups are shown separately
+- **Group Management**: Create, edit, and delete groups
 
 ### 🗑️ Trash System
 - **Soft Delete**: Deleted notes go to trash first
 - **Restore**: Bring back accidentally deleted notes
 - **Permanent Delete**: Clean up when you're sure
+- **Empty Trash**: Clear all deleted notes at once
+- **Trash Preview**: See note content and group info in trash
 
 ### 🎨 Beautiful Dashboard
-- **Grid View**: See all your notes at a glance
-- **Group Management**: Create and manage note groups
+- **Simplified Interface**: Clean, focused design
+- **Grouped View**: See notes organized by groups
 - **Trash Management**: Restore or permanently delete notes
-- **Layout Management**: Save and restore different arrangements
+- **Quick Actions**: Create notes and groups easily
 
 ## 🚀 Installation
 
@@ -63,70 +66,54 @@ Markies is a powerful, modern alternative to the built-in macOS Stickies app. It
 4. **Build for production:**
    ```bash
    npm run build
-   npm run build:electron
+   npm run dist
    ```
 
 ## 📖 Usage
 
 ### Creating Notes
 1. Open the dashboard (launches automatically)
-2. Click "New Note" button
-3. Fill in the title, content, and customize colors
-4. Optionally assign to a group
-5. Click "Create Note"
+2. Click "New Note" button in the dashboard
+3. Or use the menu: Note → New Note (⌘+N)
+4. Notes open at the mouse cursor position
+5. Start typing immediately - notes auto-save
 
 ### Note Features
-- **Edit/Preview Toggle**: Switch between editing and preview modes
-- **Settings Panel**: Click the gear icon to customize:
-  - Background color
-  - Opacity (10% - 100%)
-  - Always on top behavior
-  - Click-through mode
 - **Auto-save**: Notes save automatically as you type
+- **Settings Panel**: Click the gear icon (⚙) to customize:
+  - Background color
+  - Window opacity (50% - 100%)
+  - Always on top behavior
+- **Collapse**: Click the collapse button (▲/▼) to minimize to title bar
+- **Close**: Click the × button to close the note
+
+### Dashboard Features
+- **New Note**: Create a new note at mouse position
+- **New Group**: Create a new group for organizing notes
+- **Close**: Hide the dashboard window
+- **Group Management**: 
+  - Create groups with custom names and colors
+  - Delete groups (with confirmation for notes)
+  - Delete all notes in a group
+- **Trash Management**:
+  - Restore individual notes
+  - Permanently delete notes
+  - Empty entire trash
 
 ### Keyboard Shortcuts
 - `⌘ + N`: Create new note
 - `⌘ + W`: Close current note
-- `⌘ + ,`: Open settings
-- `⌘ + Delete`: Delete current note
+- `⌘ + ,`: Open settings (in note window)
+- `⌘ + Alt + C`: Collapse all notes
+- `⌘ + Alt + E`: Expand all notes
+- `⌘ + Alt + F`: Toggle always on top
+- `⌘ + Alt + T`: Toggle opacity
 
-### Markdown Support
-Markies supports standard Markdown syntax:
-
-```markdown
-# Heading 1
-## Heading 2
-### Heading 3
-
-**Bold text**
-*Italic text*
-`Inline code`
-
-- List item 1
-- List item 2
-
-1. Numbered list
-2. Second item
-
-[Link text](https://example.com)
-
-> Blockquote
-
-\`\`\`
-Code block
-\`\`\`
-```
-
-### Groups
-- Create groups from the dashboard
-- Assign notes to groups when creating or editing
-- Color-code groups for easy identification
-- Drag notes between groups (coming soon)
-
-### Layouts
-- Save current arrangement of notes as a layout
-- Restore previously saved layouts
-- Great for different work contexts or projects
+### Window Management
+- **Rearrange**: Menu → Window → Rearrange Notes
+- **Reposition**: Menu → Window → Reposition Notes
+- **Collapse All**: Menu → Window → Collapse All Notes
+- **Expand All**: Menu → Window → Expand All Notes
 
 ## 🔧 Development
 
@@ -140,8 +127,9 @@ Markies/
 │   └── renderer/          # Renderer processes
 │       ├── dashboard.html # Dashboard window
 │       ├── dashboard.jsx  # Dashboard React app
-│       ├── note.html      # Note window
-│       └── note.js        # Note window logic
+│       ├── note-react.html # Note window
+│       └── note.jsx       # Note window React app
+├── assets/                # App icons and assets
 ├── dist/                  # Built files
 ├── package.json
 └── README.md
@@ -152,37 +140,35 @@ Markies/
 - `npm run dev:renderer`: Start Vite dev server for renderer
 - `npm run dev:main`: Compile and run main process
 - `npm run build`: Build for production
-- `npm run build:electron`: Build and package for distribution
+- `npm run dist`: Build and package for distribution
 - `npm run type-check`: Run TypeScript type checking
 - `npm run lint`: Run ESLint
 
 ### Tech Stack
 - **Electron**: Desktop app framework
-- **React**: UI library for dashboard
+- **React**: UI library for dashboard and notes
 - **TypeScript**: Type-safe JavaScript
 - **Vite**: Fast build tool
 - **electron-store**: Data persistence
 - **CSS Grid/Flexbox**: Layout and styling
 
-## 🎯 Roadmap
+## 🎯 Recent Updates
 
-### Short Term
-- [ ] Drag and drop between groups
-- [ ] Search functionality
-- [ ] Export notes (PDF, HTML, Markdown)
-- [ ] Import from other apps
+### Latest Features
+- ✅ Simplified dashboard interface
+- ✅ Improved note window positioning
+- ✅ Enhanced group management
+- ✅ Better trash system with previews
+- ✅ Collapse/expand functionality
+- ✅ Window management shortcuts
+- ✅ Auto-save improvements
+- ✅ Default 80% opacity for new notes
 
-### Medium Term
-- [ ] Real-time collaboration
-- [ ] Cloud sync
-- [ ] Plugins system
-- [ ] Custom themes
-
-### Long Term
-- [ ] iOS/Android companion apps
-- [ ] Web version
-- [ ] AI-powered features
-- [ ] Voice notes
+### Removed Features
+- ❌ Markdown support (simplified for better performance)
+- ❌ Click-through mode (temporarily disabled)
+- ❌ Layouts system (simplified UI)
+- ❌ Complex settings panels
 
 ## 🐛 Troubleshooting
 
