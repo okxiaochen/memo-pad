@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#FFD700" stroke="#FFA500" stroke-width="8"/>
+  
+  <!-- Note/sticky note shape -->
+  <path d="M 120 160 L 320 160 L 320 400 L 280 360 L 120 360 Z" fill="#FFFFFF" stroke="#333333" stroke-width="4"/>
+  
+  <!-- Lines representing text -->
+  <line x1="140" y1="180" x2="300" y2="180" stroke="#333333" stroke-width="3"/>
+  <line x1="140" y1="200" x2="280" y2="200" stroke="#333333" stroke-width="3"/>
+  <line x1="140" y1="220" x2="260" y2="220" stroke="#333333" stroke-width="3"/>
+  <line x1="140" y1="240" x2="240" y2="240" stroke="#333333" stroke-width="3"/>
+  
+  <!-- Pin -->
+  <circle cx="200" cy="140" r="8" fill="#FF4444" stroke="#CC0000" stroke-width="2"/>
+</svg> 

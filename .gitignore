@@ -1,0 +1,31 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+release/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Environment files
+.env
+.env.*
+
+# Mac iconset temp
+assets/icon.iconset/
+
+# Misc
+*.log 
