@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { stripHtml, getFirstLine, getTextPreview } from './utils.js';
 
 // Helper function to convert rgba to hex
 const rgbaToHex = (rgba) => {
@@ -103,6 +104,8 @@ const Icons = {
   ),
 };
 
+
+
 // Note Card Component
 const NoteCard = ({ note, onEdit, onDelete, onOpen, groups, onDragStart }) => {
   const formatDate = (timestamp) => {
@@ -110,6 +113,13 @@ const NoteCard = ({ note, onEdit, onDelete, onOpen, groups, onDragStart }) => {
   };
 
   const group = groups.find(g => g.id === note.groupId);
+  
+  // Strip HTML tags from content for display
+  const displayTitle = getFirstLine(note.content);
+  const displayContent = getTextPreview(note.content, 200);
+  
+  // Truncate title if it's too long for display
+  const truncatedTitle = displayTitle.length > 50 ? displayTitle.substring(0, 50) + '...' : displayTitle;
 
   return (
     <div 
@@ -121,9 +131,7 @@ const NoteCard = ({ note, onEdit, onDelete, onOpen, groups, onDragStart }) => {
     >
       <div className="note-card-header">
         <div className="note-title">
-          {note.content 
-            ? (note.content.split('\n')[0].substring(0, 50) + (note.content.split('\n')[0].length > 50 ? '...' : ''))
-            : 'Empty note...'}
+          {truncatedTitle}
         </div>
         <div className="note-actions">
           <button 
@@ -143,7 +151,7 @@ const NoteCard = ({ note, onEdit, onDelete, onOpen, groups, onDragStart }) => {
         </div>
       </div>
       <div className="note-content">
-        {note.content ? note.content.substring(0, 200) + (note.content.length > 200 ? '...' : '') : 'Click to start typing...'}
+        {displayContent}
       </div>
       <div className="note-meta">
         {group && (

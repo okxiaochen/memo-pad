@@ -1,6 +1,776 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Rich text editor with enhanced features
+class RichTextEditor {
+    constructor(element, onContentChange) {
+        this.element = element;
+        this.onContentChange = onContentChange;
+        this.isTyping = false;
+        this.init();
+    }
+
+    init() {
+        this.element.contentEditable = true;
+        this.element.addEventListener('paste', this.handlePaste.bind(this));
+        this.element.addEventListener('keydown', this.handleKeydown.bind(this));
+        this.element.addEventListener('input', this.handleInput.bind(this));
+        this.element.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+        
+        // Add typing detection
+        this.element.addEventListener('keydown', () => {
+            this.isTyping = true;
+        });
+        
+        this.element.addEventListener('keyup', () => {
+            setTimeout(() => {
+                this.isTyping = false;
+            }, 100);
+        });
+    }
+
+    handlePaste(e) {
+        e.preventDefault();
+        const clipboardData = e.clipboardData || window.clipboardData;
+        
+        // Handle image paste
+        if (clipboardData.items) {
+            for (let i = 0; i < clipboardData.items.length; i++) {
+                const item = clipboardData.items[i];
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.style.maxWidth = '100%';
+                        img.style.height = 'auto';
+                        this.insertNode(img);
+                    };
+                    reader.readAsDataURL(blob);
+                    return;
+                }
+            }
+        }
+
+        // Handle text paste
+        const text = clipboardData.getData('text/plain');
+        this.insertText(text);
+    }
+
+    handleKeydown(e) {
+        // List creation
+        if (e.key === 'Enter') {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const currentNode = range.startContainer;
+            
+            // Check if we're in a list item
+            const listItem = currentNode.nodeType === Node.TEXT_NODE 
+                ? currentNode.parentElement 
+                : currentNode;
+            
+            if (listItem.tagName === 'LI') {
+                e.preventDefault();
+                this.createNewListItem(listItem);
+                return;
+            }
+
+            // Check for list creation
+            const lineText = this.getLineText(range);
+            if (lineText.match(/^[\s]*[-*+]\s/)) {
+                e.preventDefault();
+                this.createUnorderedList(lineText);
+                return;
+            }
+            if (lineText.match(/^[\s]*\d+\.\s/)) {
+                e.preventDefault();
+                this.createOrderedList(lineText);
+                return;
+            }
+            if (lineText.match(/^[\s]*\[[\sxX]?\]\s/)) {
+                e.preventDefault();
+                this.createTodoList(lineText);
+                return;
+            }
+        }
+
+        // Todo toggle with space
+        if (e.key === ' ' && this.isInTodoItem()) {
+            e.preventDefault();
+            this.toggleTodoItem();
+            return;
+        }
+
+        // Strikethrough with Ctrl+S
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            this.toggleStrikethrough();
+            return;
+        }
+    }
+
+    handleInput() {
+        // Only update content if not currently typing
+        if (!this.isTyping) {
+            this.onContentChange(this.element.innerHTML);
+        } else {
+            // Use a debounced approach for typing
+            clearTimeout(this.typingTimeout);
+            this.typingTimeout = setTimeout(() => {
+                this.onContentChange(this.element.innerHTML);
+            }, 100);
+        }
+    }
+
+    handleContextMenu(e) {
+        e.preventDefault();
+        // Use client coordinates which are relative to the window
+        this.showContextMenu(e.clientX, e.clientY);
+    }
+
+    insertNode(node) {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(node);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        this.onContentChange(this.element.innerHTML);
+    }
+
+    insertText(text) {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(text));
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        this.onContentChange(this.element.innerHTML);
+    }
+
+    getLineText(range) {
+        const container = range.startContainer;
+        const text = container.textContent || '';
+        const offset = range.startOffset;
+        const beforeCursor = text.substring(0, offset);
+        const lines = beforeCursor.split('\n');
+        return lines[lines.length - 1];
+    }
+
+    createUnorderedList(lineText) {
+        const match = lineText.match(/^([\s]*)[-*+]\s(.+)/);
+        if (match) {
+            const [, spaces, content] = match;
+            const listItem = document.createElement('li');
+            listItem.textContent = content;
+            
+            const list = document.createElement('ul');
+            list.appendChild(listItem);
+            
+            this.replaceCurrentLine(list);
+        }
+    }
+
+    createOrderedList(lineText) {
+        const match = lineText.match(/^([\s]*)\d+\.\s(.+)/);
+        if (match) {
+            const [, spaces, content] = match;
+            const listItem = document.createElement('li');
+            listItem.textContent = content;
+            
+            const list = document.createElement('ol');
+            list.appendChild(listItem);
+            
+            this.replaceCurrentLine(list);
+        }
+    }
+
+    createTodoList(lineText) {
+        const match = lineText.match(/^([\s]*)\[([\sxX]?)\]\s(.+)/);
+        if (match) {
+            const [, spaces, checked, content] = match;
+            const listItem = document.createElement('li');
+            listItem.className = 'todo-item';
+            listItem.innerHTML = `
+                <input type="checkbox" ${checked.toLowerCase() === 'x' ? 'checked' : ''}>
+                <span>${content}</span>
+            `;
+            
+            const list = document.createElement('ul');
+            list.className = 'todo-list';
+            list.appendChild(listItem);
+            
+            this.replaceCurrentLine(list);
+        }
+    }
+
+    createNewListItem(currentItem) {
+        const newItem = document.createElement('li');
+        newItem.innerHTML = '<br>';
+        currentItem.parentNode.insertBefore(newItem, currentItem.nextSibling);
+        
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.setStart(newItem, 0);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    isInTodoItem() {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        let node = range.startContainer;
+        
+        while (node && node.nodeType === Node.TEXT_NODE) {
+            node = node.parentElement;
+        }
+        
+        return node && node.classList && node.classList.contains('todo-item');
+    }
+
+    toggleTodoItem() {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        let node = range.startContainer;
+        
+        while (node && node.nodeType === Node.TEXT_NODE) {
+            node = node.parentElement;
+        }
+        
+        if (node && node.classList && node.classList.contains('todo-item')) {
+            const checkbox = node.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                this.onContentChange(this.element.innerHTML);
+            }
+        }
+    }
+
+    toggleStrikethrough() {
+        const selection = window.getSelection();
+        if (selection.rangeCount === 0) return;
+        
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return;
+        
+        // Check if the selection is already strikethrough
+        let targetElement = null;
+        
+        // Get the common ancestor
+        let commonAncestor = range.commonAncestorContainer;
+        if (commonAncestor.nodeType === Node.TEXT_NODE) {
+            commonAncestor = commonAncestor.parentElement;
+        }
+        
+        // Look for a span with strikethrough that contains the entire selection
+        let currentElement = commonAncestor;
+        while (currentElement && currentElement !== this.element) {
+            if (currentElement.tagName.toLowerCase() === 'span' && 
+                currentElement.style.textDecoration === 'line-through') {
+                // Check if this element contains the entire selection
+                const elementRange = document.createRange();
+                elementRange.selectNodeContents(currentElement);
+                
+                if (range.compareBoundaryPoints(Range.START_TO_START, elementRange) >= 0 &&
+                    range.compareBoundaryPoints(Range.END_TO_END, elementRange) <= 0) {
+                    targetElement = currentElement;
+                    break;
+                }
+            }
+            currentElement = currentElement.parentElement;
+        }
+        
+        if (targetElement) {
+            // Remove strikethrough - unwrap the content
+            console.log('Removing strikethrough formatting');
+            
+            // Create a fragment with all the content
+            const fragment = document.createDocumentFragment();
+            while (targetElement.firstChild) {
+                fragment.appendChild(targetElement.firstChild);
+            }
+            
+            // Replace the target element with its content
+            targetElement.parentNode.replaceChild(fragment, targetElement);
+            
+            // Restore selection to the unwrapped content
+            const newRange = document.createRange();
+            newRange.setStart(fragment.firstChild || fragment, 0);
+            newRange.setEnd(fragment.lastChild || fragment, 
+                fragment.lastChild ? fragment.lastChild.length : 0);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+        } else {
+            // Add strikethrough - wrap the content
+            const span = document.createElement('span');
+            span.style.textDecoration = 'line-through';
+            
+            try {
+                range.surroundContents(span);
+                console.log('Applied strikethrough formatting');
+            } catch (e) {
+                console.log('surroundContents failed for strikethrough, trying alternative approach');
+                const fragment = range.extractContents();
+                span.appendChild(fragment);
+                range.insertNode(span);
+            }
+            
+            // Restore selection
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        
+        this.onContentChange(this.element.innerHTML);
+    }
+
+    replaceCurrentLine(newElement) {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        const container = range.startContainer;
+        
+        // Find the current line
+        let lineNode = container;
+        while (lineNode && lineNode.nodeType === Node.TEXT_NODE) {
+            lineNode = lineNode.parentElement;
+        }
+        
+        if (lineNode) {
+            lineNode.parentNode.replaceChild(newElement, lineNode);
+            const newRange = document.createRange();
+            newRange.setStart(newElement, 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            this.onContentChange(this.element.innerHTML);
+        }
+    }
+
+    showContextMenu(x, y) {
+        // Remove existing context menu
+        const existingMenu = document.querySelector('.context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        
+        // Calculate menu position to ensure it fits within the window
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const menuWidth = 150; // Approximate menu width
+        const menuHeight = 300; // Approximate menu height
+        
+        let menuX = x;
+        let menuY = y;
+        
+        // Adjust horizontal position if menu would go off-screen
+        if (menuX + menuWidth > windowWidth) {
+            menuX = windowWidth - menuWidth - 10;
+        }
+        
+        // Adjust vertical position if menu would go off-screen
+        if (menuY + menuHeight > windowHeight) {
+            menuY = windowHeight - menuHeight - 10;
+        }
+        
+        // Ensure menu doesn't go above or left of the window
+        if (menuX < 10) menuX = 10;
+        if (menuY < 10) menuY = 10;
+        
+        menu.style.cssText = `
+            position: absolute;
+            top: ${menuY}px;
+            left: ${menuX}px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 150px;
+            max-width: 200px;
+        `;
+
+        const menuItems = [
+            { label: 'Bold', action: () => this.execCommand('bold') },
+            { label: 'Italic', action: () => this.execCommand('italic') },
+            { label: 'Strikethrough', action: () => this.toggleStrikethrough() },
+            { separator: true },
+            { label: 'Bullet List', action: () => this.execCommand('insertUnorderedList') },
+            { label: 'Numbered List', action: () => this.execCommand('insertOrderedList') },
+            { label: 'Todo List', action: () => this.insertTodoItem() },
+            { separator: true },
+            { label: 'Font Size...', action: () => this.showFontSizeDialog() },
+            { label: 'Font Family...', action: () => this.showFontFamilyDialog() },
+            { separator: true },
+            { label: 'Cut', action: () => this.execCommand('cut') },
+            { label: 'Copy', action: () => this.execCommand('copy') },
+            { label: 'Paste', action: () => this.execCommand('paste') }
+        ];
+
+        menuItems.forEach(item => {
+            if (item.separator) {
+                const separator = document.createElement('hr');
+                separator.style.cssText = 'margin: 4px 0; border: none; border-top: 1px solid #eee;';
+                menu.appendChild(separator);
+            } else {
+                const menuItem = document.createElement('div');
+                menuItem.textContent = item.label;
+                menuItem.style.cssText = `
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    border: none;
+                    background: none;
+                    width: 100%;
+                    text-align: left;
+                    user-select: none;
+                    -webkit-user-select: none;
+                `;
+                
+                // Add hover effects
+                menuItem.addEventListener('mouseenter', () => {
+                    menuItem.style.backgroundColor = '#f0f0f0';
+                });
+                menuItem.addEventListener('mouseleave', () => {
+                    menuItem.style.backgroundColor = 'transparent';
+                });
+                
+                // Fix click handling
+                menuItem.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                
+                menuItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Menu item clicked:', item.label);
+                    try {
+                        item.action();
+                    } catch (error) {
+                        console.error('Error executing menu action:', error);
+                    }
+                    menu.remove();
+                });
+                
+                menu.appendChild(menuItem);
+            }
+        });
+
+        // Append to the note container instead of document body
+        this.element.parentElement.appendChild(menu);
+
+        // Close menu when clicking outside or pressing Escape
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        
+        // Add event listeners with a small delay to avoid immediate closure
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+            document.addEventListener('keydown', escapeHandler);
+        }, 100);
+    }
+
+    execCommand(command, value = null) {
+        // Modern approach using Selection API instead of execCommand
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        
+        const range = selection.getRangeAt(0);
+        
+        switch (command) {
+            case 'bold':
+                this.toggleFormat('strong');
+                break;
+            case 'italic':
+                this.toggleFormat('em');
+                break;
+            case 'insertUnorderedList':
+                this.insertList('ul');
+                break;
+            case 'insertOrderedList':
+                this.insertList('ol');
+                break;
+            case 'cut':
+                document.execCommand('cut');
+                break;
+            case 'copy':
+                document.execCommand('copy');
+                break;
+            case 'paste':
+                document.execCommand('paste');
+                break;
+            case 'fontSize':
+                this.setFontSize(value);
+                break;
+            case 'fontName':
+                this.setFontFamily(value);
+                break;
+        }
+        
+        this.onContentChange(this.element.innerHTML);
+    }
+
+    toggleFormat(tagName) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) {
+            console.log('No selection for formatting');
+            return;
+        }
+        
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) {
+            console.log('Selection is collapsed, cannot format');
+            return;
+        }
+        
+        // Check if the selection is already wrapped in the target tag
+        let targetElement = null;
+        
+        // Check if the entire selection is within a single element of the target type
+        const startContainer = range.startContainer;
+        const endContainer = range.endContainer;
+        
+        // Get the common ancestor
+        let commonAncestor = range.commonAncestorContainer;
+        if (commonAncestor.nodeType === Node.TEXT_NODE) {
+            commonAncestor = commonAncestor.parentElement;
+        }
+        
+        // Look for the target element that contains the entire selection
+        let currentElement = commonAncestor;
+        while (currentElement && currentElement !== this.element) {
+            if (currentElement.tagName.toLowerCase() === tagName.toLowerCase()) {
+                // Check if this element contains the entire selection
+                const elementRange = document.createRange();
+                elementRange.selectNodeContents(currentElement);
+                
+                if (range.compareBoundaryPoints(Range.START_TO_START, elementRange) >= 0 &&
+                    range.compareBoundaryPoints(Range.END_TO_END, elementRange) <= 0) {
+                    targetElement = currentElement;
+                    break;
+                }
+            }
+            currentElement = currentElement.parentElement;
+        }
+        
+        if (targetElement) {
+            // Remove formatting - unwrap the content
+            console.log(`Removing ${tagName} formatting`);
+            
+            // Create a fragment with all the content
+            const fragment = document.createDocumentFragment();
+            while (targetElement.firstChild) {
+                fragment.appendChild(targetElement.firstChild);
+            }
+            
+            // Replace the target element with its content
+            targetElement.parentNode.replaceChild(fragment, targetElement);
+            
+            // Restore selection to the unwrapped content
+            const newRange = document.createRange();
+            newRange.setStart(fragment.firstChild || fragment, 0);
+            newRange.setEnd(fragment.lastChild || fragment, 
+                fragment.lastChild ? fragment.lastChild.length : 0);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+        } else {
+            // Add formatting - wrap the content
+            const element = document.createElement(tagName);
+            
+            try {
+                range.surroundContents(element);
+                console.log(`Applied ${tagName} formatting`);
+            } catch (e) {
+                console.log('surroundContents failed, trying alternative approach');
+                // If surroundContents fails, try a different approach
+                const fragment = range.extractContents();
+                element.appendChild(fragment);
+                range.insertNode(element);
+            }
+            
+            // Restore selection
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+
+    insertList(listType) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) {
+            console.log('No selection for list insertion');
+            return;
+        }
+        
+        const range = selection.getRangeAt(0);
+        const list = document.createElement(listType);
+        const listItem = document.createElement('li');
+        
+        // Get the text content and create list item
+        const textContent = range.toString() || 'New list item';
+        listItem.textContent = textContent;
+        list.appendChild(listItem);
+        
+        console.log(`Creating ${listType} with text: "${textContent}"`);
+        
+        // Replace the selection with the list
+        range.deleteContents();
+        range.insertNode(list);
+        
+        // Place cursor in the list item
+        const newRange = document.createRange();
+        newRange.setStart(listItem, 0);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        
+        console.log(`List inserted successfully`);
+    }
+
+    setFontSize(size) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return;
+        
+        // Check if the selection already has font size applied
+        const parentElement = range.commonAncestorContainer.nodeType === Node.TEXT_NODE 
+            ? range.commonAncestorContainer.parentElement 
+            : range.commonAncestorContainer;
+        
+        // Check if we're already inside a span with font size
+        let targetElement = null;
+        let currentElement = parentElement;
+        
+        while (currentElement && currentElement !== this.element) {
+            if (currentElement.tagName.toLowerCase() === 'span' && 
+                currentElement.style.fontSize) {
+                targetElement = currentElement;
+                break;
+            }
+            currentElement = currentElement.parentElement;
+        }
+        
+        if (targetElement) {
+            // Remove font size - unwrap the content
+            console.log('Removing font size formatting');
+            const fragment = document.createDocumentFragment();
+            while (targetElement.firstChild) {
+                fragment.appendChild(targetElement.firstChild);
+            }
+            targetElement.parentNode.replaceChild(fragment, targetElement);
+        } else {
+            // Add font size - wrap the content
+            const span = document.createElement('span');
+            span.style.fontSize = size + 'px';
+            
+            try {
+                range.surroundContents(span);
+                console.log(`Applied font size: ${size}px`);
+            } catch (e) {
+                const fragment = range.extractContents();
+                span.appendChild(fragment);
+                range.insertNode(span);
+            }
+        }
+        
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    setFontFamily(font) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return;
+        
+        // Check if the selection already has font family applied
+        const parentElement = range.commonAncestorContainer.nodeType === Node.TEXT_NODE 
+            ? range.commonAncestorContainer.parentElement 
+            : range.commonAncestorContainer;
+        
+        // Check if we're already inside a span with font family
+        let targetElement = null;
+        let currentElement = parentElement;
+        
+        while (currentElement && currentElement !== this.element) {
+            if (currentElement.tagName.toLowerCase() === 'span' && 
+                currentElement.style.fontFamily) {
+                targetElement = currentElement;
+                break;
+            }
+            currentElement = currentElement.parentElement;
+        }
+        
+        if (targetElement) {
+            // Remove font family - unwrap the content
+            console.log('Removing font family formatting');
+            const fragment = document.createDocumentFragment();
+            while (targetElement.firstChild) {
+                fragment.appendChild(targetElement.firstChild);
+            }
+            targetElement.parentNode.replaceChild(fragment, targetElement);
+        } else {
+            // Add font family - wrap the content
+            const span = document.createElement('span');
+            span.style.fontFamily = font;
+            
+            try {
+                range.surroundContents(span);
+                console.log(`Applied font family: ${font}`);
+            } catch (e) {
+                const fragment = range.extractContents();
+                span.appendChild(fragment);
+                range.insertNode(span);
+            }
+        }
+        
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    insertTodoItem() {
+        const todoItem = document.createElement('li');
+        todoItem.className = 'todo-item';
+        todoItem.innerHTML = '<input type="checkbox"><span>New todo item</span>';
+        this.insertNode(todoItem);
+    }
+
+    showFontSizeDialog() {
+        const size = prompt('Enter font size (px):', '14');
+        if (size && !isNaN(size)) {
+            this.execCommand('fontSize', size);
+        }
+    }
+
+    showFontFamilyDialog() {
+        const font = prompt('Enter font family:', 'Arial');
+        if (font) {
+            this.execCommand('fontName', font);
+        }
+    }
+}
+
 // Simple markdown parser
 const parseMarkdown = (text) => {
     let html = text
@@ -103,6 +873,7 @@ const Note = () => {
     const saveTimeoutRef = useRef(null);
     const noteContainerRef = useRef(null);
     const settingsPanelRef = useRef(null);
+    const richEditorRef = useRef(null);
     
     console.log('Note component state:', { showSettings, currentNote: !!currentNote });
 
@@ -221,6 +992,17 @@ const Note = () => {
         }
     }, [content, backgroundColor, opacity, alwaysOnTop]); // Removed clickThrough dependency
 
+    // Initialize rich text editor
+    useEffect(() => {
+        if (richEditorRef.current && currentNote) {
+            // Only initialize once
+            if (!richEditorRef.current.richEditor) {
+                richEditorRef.current.innerHTML = content;
+                richEditorRef.current.richEditor = new RichTextEditor(richEditorRef.current, handleContentChange);
+            }
+        }
+    }, [currentNote]);
+
     // Auto-save when content changes
     useEffect(() => {
         if (!currentNote) return; // No currentNote, don't auto-save
@@ -261,8 +1043,7 @@ const Note = () => {
     }, [backgroundColor, opacity, alwaysOnTop, currentNote, saveNote]);
 
     // Handle content change
-    const handleContentChange = (e) => {
-        const newContent = e.target.value;
+    const handleContentChange = (newContent) => {
         console.log('Note content changed:', newContent.length, 'characters');
         setContent(newContent);
     };
@@ -495,13 +1276,17 @@ const Note = () => {
             </div>
             {!currentNote?.isCollapsed && (
                 <div className="note-content">
-                    <textarea
+                    <div
+                        ref={richEditorRef}
                         className="note-editor"
-                        placeholder="Start typing your note..."
+                        contentEditable={true}
                         spellCheck="false"
-                        value={content}
-                        onChange={handleContentChange}
-                        disabled={!currentNote}
+                        data-placeholder="Start typing your note..."
+                        style={{
+                            minHeight: '100px',
+                            outline: 'none',
+                            wordWrap: 'break-word'
+                        }}
                     />
                     {!currentNote && <div style={{color: '#888', marginTop: 8}}>Loading...</div>}
                 </div>
@@ -641,6 +1426,62 @@ const styles = `
             line-height: 1.5;
             color: inherit;
             font-family: inherit;
+            padding: 10px 0;
+        }
+
+        .note-editor:empty:before {
+            content: attr(data-placeholder);
+            color: rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
+
+        .todo-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 8px 0;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 4px 0;
+            padding: 2px 0;
+        }
+
+        .todo-item input[type="checkbox"] {
+            margin-right: 8px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .todo-item span {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .todo-item input[type="checkbox"]:checked + span {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        ul, ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 2px 0;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+
+        .context-menu {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         .settings-panel {

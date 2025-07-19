@@ -167,9 +167,11 @@ function createNoteWindow(note: Note): BrowserWindow {
   })
   noteWindow.setWindowButtonVisibility(false)
 
+  // Use Quill editor by default, fallback to simple editor if needed
+  const useQuillEditor = true; // Set to false to use simple editor
   const url = isDev
-    ? `http://localhost:5177/note-react.html?id=${note.id}`
-    : `file://${path.join(__dirname, '../renderer/note-react.html')}?id=${note.id}`
+    ? `http://localhost:5177/${useQuillEditor ? 'note-quill' : 'note-simple'}.html?id=${note.id}`
+    : `file://${path.join(__dirname, `../renderer/${useQuillEditor ? 'note-quill' : 'note-simple'}.html`)}?id=${note.id}`
 
   noteWindow.loadURL(url)
   noteWindow.setMenuBarVisibility(false)
@@ -680,6 +682,16 @@ ipcMain.handle('open-note-window', (event, noteId: string) => {
   }
   
   return true
+})
+
+ipcMain.handle('get-window-bounds', (event) => {
+  const sender = event.sender;
+  const window = BrowserWindow.fromWebContents(sender);
+  if (window) {
+    const bounds = window.getBounds();
+    return { x: bounds.x, y: bounds.y };
+  }
+  return { x: 0, y: 0 };
 })
 
 // Helper functions

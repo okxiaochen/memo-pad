@@ -96,6 +96,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window management
   closeWindow: (): void => ipcRenderer.send('close-window'),
   minimizeWindow: (): void => ipcRenderer.send('minimize-window'),
+  getWindowBounds: (): Promise<{ x: number; y: number }> => ipcRenderer.invoke('get-window-bounds'),
 
   // Collapse state change listener
   onCollapseStateChange: (callback: (noteId: string, isCollapsed: boolean) => void): void => {
