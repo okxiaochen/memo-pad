@@ -511,7 +511,7 @@ const NoteSimple = () => {
                     ref={textareaRef}
                     value={content}
                     onChange={handleContentChange}
-                    placeholder="Start writing your note..."
+                    placeholder=""
                     style={{
                         flex: 1,
                         border: 'none',

@@ -208,7 +208,7 @@ const NoteQuill = () => {
                         matchVisual: false
                     }
                 },
-                placeholder: 'Start writing your note...',
+                placeholder: '',
                 readOnly: false
             });
 
