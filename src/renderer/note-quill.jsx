@@ -550,22 +550,22 @@ const NoteQuill = () => {
             {/* Title Bar - Always show, but hide title text when not collapsed */}
             <div 
                 className="note-title-bar"
-                style={{
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0 15px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-                    WebkitAppRegion: 'drag',
-                    cursor: 'move'
-                }}
+                                    style={{
+                        height: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0 8px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                        WebkitAppRegion: 'drag',
+                        cursor: 'move'
+                    }}
             >
                 {/* Title text - Only show when collapsed */}
                 {currentNote.isCollapsed && (
                     <div style={{ 
-                        fontSize: '14px', 
+                        fontSize: '9px', 
                         fontWeight: '500',
                         color: 'inherit',
                         opacity: 0.8
@@ -581,8 +581,9 @@ const NoteQuill = () => {
                 
                 <div style={{ 
                     display: 'flex', 
-                    gap: '8px',
-                    WebkitAppRegion: 'no-drag'
+                    gap: '2px',
+                    WebkitAppRegion: 'no-drag',
+                    alignItems: 'center'
                 }}>
                     <button
                         onClick={(e) => {
@@ -596,17 +597,20 @@ const NoteQuill = () => {
                             border: 'none',
                             color: 'inherit',
                             cursor: 'pointer',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
+                            padding: '1px 3px',
+                            borderRadius: '2px',
+                            fontSize: '7px',
                             opacity: 0.7,
-                            transition: 'opacity 0.2s ease'
+                            transition: 'opacity 0.2s ease',
+                            lineHeight: 1,
+                            minWidth: '12px',
+                            height: '10px'
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
                         title={showAdvancedTools ? 'Hide Advanced Tools' : 'Show Advanced Tools'}
                     >
-                        {showAdvancedTools ? '🔽' : '🔼'}
+                        {showAdvancedTools ? '▼' : '▲'}
                     </button>
                     
                     <button
@@ -616,16 +620,19 @@ const NoteQuill = () => {
                             border: 'none',
                             color: 'inherit',
                             cursor: 'pointer',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
+                            padding: '1px 3px',
+                            borderRadius: '2px',
+                            fontSize: '7px',
                             opacity: 0.7,
-                            transition: 'opacity 0.2s ease'
+                            transition: 'opacity 0.2s ease',
+                            lineHeight: 1,
+                            minWidth: '12px',
+                            height: '10px'
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
                     >
-                        {currentNote.isCollapsed ? '⬇' : '⬆'}
+                        {currentNote.isCollapsed ? '▽' : '△'}
                     </button>
                     
                     <button
@@ -635,16 +642,19 @@ const NoteQuill = () => {
                             border: 'none',
                             color: 'inherit',
                             cursor: 'pointer',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
+                            padding: '1px 3px',
+                            borderRadius: '2px',
+                            fontSize: '8px',
                             opacity: 0.7,
-                            transition: 'opacity 0.2s ease'
+                            transition: 'opacity 0.2s ease',
+                            lineHeight: 1,
+                            minWidth: '12px',
+                            height: '10px'
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
                     >
-                        ⚙️
+                        ⋯
                     </button>
                     
                     <button
@@ -654,16 +664,20 @@ const NoteQuill = () => {
                             border: 'none',
                             color: 'inherit',
                             cursor: 'pointer',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
+                            padding: '1px 3px',
+                            borderRadius: '2px',
+                            fontSize: '9px',
                             opacity: 0.7,
-                            transition: 'opacity 0.2s ease'
+                            transition: 'opacity 0.2s ease',
+                            lineHeight: 1,
+                            minWidth: '12px',
+                            height: '10px',
+                            fontWeight: 'bold'
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
                     >
-                        ✕
+                        ×
                     </button>
                 </div>
             </div>
@@ -674,8 +688,8 @@ const NoteQuill = () => {
                     ref={settingsPanelRef}
                     style={{
                         position: 'absolute',
-                        top: '45px',
-                        right: '15px',
+                        top: '18px',
+                        right: '8px',
                         backgroundColor: 'rgba(0, 0, 0, 0.9)',
                         borderRadius: '8px',
                         padding: '15px',
