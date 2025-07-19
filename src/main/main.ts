@@ -749,8 +749,7 @@ app.whenReady().then(() => {
   // Register application shortcuts (not global)
   // These will only work when the app is focused
 
-  // Create dashboard window
-  createDashboardWindow()
+  // Don't create dashboard window by default - it will be created when requested
 
   // Create windows for existing notes that should be visible
   const existingNotes = store.get('notes')
@@ -893,6 +892,20 @@ app.whenReady().then(() => {
       submenu: [
         { label: 'Minimize', accelerator: 'CmdOrCtrl+M', role: 'minimize' },
         { label: 'Close', accelerator: 'CmdOrCtrl+W', role: 'close' },
+        { type: 'separator' },
+        { 
+          label: 'Open Dashboard', 
+          accelerator: 'CmdOrCtrl+Shift+D',
+          click: () => {
+            console.log('Menu shortcut: Open Dashboard');
+            if (dashboardWindow) {
+              dashboardWindow.show();
+              dashboardWindow.focus();
+            } else {
+              createDashboardWindow();
+            }
+          }
+        },
         { type: 'separator' },
         { label: 'Bring All to Front', role: 'front' },
         { type: 'separator' },
