@@ -13,7 +13,7 @@ MemoPad is a powerful, modern alternative to the built-in macOS Stickies app. It
 
 ## 📦 Downloads
 
-- **Latest Release**: [GitHub Releases](https://github.com/youruser/markies/releases/latest)
+- **Latest Release**: [GitHub Releases](https://github.com/okxiaochen/memo-pad/releases)
 - **Apple Silicon DMG**: Optimized for M1/M2/M3 MacBooks
 - **Source Code**: Clone the repository for development
 - Since it’s developed with Electron, it should theoretically support all platforms, but I haven’t tested it on others.
