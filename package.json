@@ -1,5 +1,5 @@
 {
-  "name": "markies",
+  "name": "memopad",
   "version": "1.0.0",
   "description": "Enhanced Stickies app for macOS with floating notes, markdown support, and advanced window management",
   "main": "dist/main/main.js",
@@ -58,8 +58,8 @@
     "uuid": "^9.0.1"
   },
   "build": {
-    "appId": "com.yourcompany.markies",
-    "productName": "Markies",
+    "appId": "com.yourcompany.memopad",
+    "productName": "MemoPad",
     "directories": {
       "output": "release"
     },

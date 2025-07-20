@@ -95,7 +95,7 @@ function createDashboardWindow(): void {
     frame: false,
     titleBarStyle: 'hiddenInset',
     autoHideMenuBar: true,
-    title: 'Markies',
+    title: 'MemoPad',
     resizable: true,
     minimizable: true,
     maximizable: true,
@@ -779,17 +779,17 @@ app.whenReady().then(() => {
   // Create application menu
   const template = [
     {
-      label: 'Markies',
+      label: 'MemoPad',
       submenu: [
-        { label: 'About Markies', role: 'about' },
+                  { label: 'About MemoPad', role: 'about' },
         { type: 'separator' },
         { label: 'Services', role: 'services' },
         { type: 'separator' },
-        { label: 'Hide Markies', accelerator: 'Command+H', role: 'hide' },
+        { label: 'Hide MemoPad', accelerator: 'Command+H', role: 'hide' },
         { label: 'Hide Others', accelerator: 'Command+Alt+H', role: 'hideothers' },
         { label: 'Show All', role: 'unhide' },
         { type: 'separator' },
-        { label: 'Quit', accelerator: 'Command+Q', role: 'quit' },
+        { label: 'Quit MemoPad', accelerator: 'Command+Q', role: 'quit' },
       ],
     },
     {

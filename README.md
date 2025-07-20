@@ -1,8 +1,8 @@
-# Markies - Enhanced Sticky Notes for macOS
+# MemoPad - Enhanced Sticky Notes for macOS
 
-![Markies Logo](https://via.placeholder.com/150x50/667eea/ffffff?text=Markies)
+![MemoPad Logo](https://via.placeholder.com/150x50/667eea/ffffff?text=MemoPad)
 
-Markies is a powerful, modern alternative to the built-in macOS Stickies app. It provides floating notes with advanced window management, group organization, and a beautiful dashboard interface.
+MemoPad is a powerful, modern alternative to the built-in macOS Stickies app. It provides floating notes with advanced window management, group organization, and a beautiful dashboard interface.
 
 ## ✨ Features
 
@@ -50,7 +50,7 @@ Markies is a powerful, modern alternative to the built-in macOS Stickies app. It
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd Markies
+   cd MemoPad
    ```
 
 2. **Install dependencies:**
@@ -119,7 +119,7 @@ Markies is a powerful, modern alternative to the built-in macOS Stickies app. It
 
 ### Project Structure
 ```
-Markies/
+MemoPad/
 ├── src/
 │   ├── main/              # Electron main process
 │   │   ├── main.ts        # Main application logic

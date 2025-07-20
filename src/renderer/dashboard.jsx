@@ -814,7 +814,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Markies</h1>
+                  <h1 className="dashboard-title">MemoPad</h1>
         <div className="dashboard-actions">
           <button 
             className="btn btn-primary" 
