@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { stripHtml, getFirstLine, getTextPreview } from './utils.js';
+import ColorPicker from 'react-best-gradient-color-picker';
 
 // Helper function to convert rgba to hex
 const rgbaToHex = (rgba) => {
@@ -360,10 +361,9 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }) => {
     onClose();
   };
 
-  const handleColorChange = (e) => {
-    const newHexColor = e.target.value;
-    const newRgbaColor = hexToRgba(newHexColor, 1.0);
-    setSettingsData({ ...settingsData, defaultBackgroundColor: newRgbaColor });
+  const handleColorChange = (newColor) => {
+    // The color picker returns a string in RGBA format directly
+    setSettingsData({ ...settingsData, defaultBackgroundColor: newColor });
   };
 
   return (
@@ -371,21 +371,44 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }) => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Default Background Color</label>
-          <input
-            type="color"
-            className="form-input"
-            value={rgbaToHex(settingsData.defaultBackgroundColor)}
+          <ColorPicker
+            value={settingsData.defaultBackgroundColor}
             onChange={handleColorChange}
-            style={{
-              width: '100%',
-              height: '40px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
+            width={450}
+            height={200}
+            hideInputs={false}
+            hideEyeDrop={false}
+            hideAdvancedSliders={false}
+            hideColorGuide={true}
+            hideInputType={false}
+            hideGradientType={true}
+            hideGradientAngle={true}
+            hideGradientStop={true}
+            hideGradientControls={true}
+            hideColorTypeBtns={true}
+            presets={[
+              'rgba(255, 235, 59, 1.0)',
+              'rgba(255, 193, 7, 1.0)',
+              'rgba(255, 152, 0, 1.0)',
+              'rgba(255, 87, 34, 1.0)',
+              'rgba(244, 67, 54, 1.0)',
+              'rgba(233, 30, 99, 1.0)',
+              'rgba(156, 39, 176, 1.0)',
+              'rgba(103, 58, 183, 1.0)',
+              'rgba(63, 81, 181, 1.0)',
+              'rgba(33, 150, 243, 1.0)',
+              'rgba(3, 169, 244, 1.0)',
+              'rgba(0, 188, 212, 1.0)',
+              'rgba(0, 150, 136, 1.0)',
+              'rgba(76, 175, 80, 1.0)',
+              'rgba(139, 195, 74, 1.0)',
+              'rgba(205, 220, 57, 1.0)',
+              'rgba(158, 158, 158, 1.0)',
+              'rgba(96, 125, 139, 1.0)'
+            ]}
           />
           <small style={{ color: '#666', fontSize: '12px' }}>
-            This color will be used for all new notes by default
+            This color will be used for all new notes by default. Use the eyedropper 👁️ to pick colors from your screen!
           </small>
         </div>
         
