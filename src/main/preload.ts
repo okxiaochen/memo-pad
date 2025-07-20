@@ -100,10 +100,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getWindowBounds: (): Promise<{ x: number; y: number }> => ipcRenderer.invoke('get-window-bounds'),
 
   // Collapse state change listener
-  onCollapseStateChange: (callback: (noteId: string, isCollapsed: boolean) => void): void => {
-    ipcRenderer.on('note-collapse-state-changed', (event, noteId: string, isCollapsed: boolean) => {
+  onCollapseStateChange: (callback: (noteId: string, isCollapsed: boolean) => void): (() => void) => {
+    const handler = (event: any, noteId: string, isCollapsed: boolean) => {
       callback(noteId, isCollapsed);
-    });
+    };
+    ipcRenderer.on('note-collapse-state-changed', handler);
+    return () => {
+      ipcRenderer.removeListener('note-collapse-state-changed', handler);
+    };
   },
 
   // Utility functions

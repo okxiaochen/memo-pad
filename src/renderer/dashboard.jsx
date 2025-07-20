@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { stripHtml, getFirstLine, getTextPreview } from './utils.js';
 import ColorPicker from 'react-best-gradient-color-picker';
@@ -314,15 +314,6 @@ const CreateGroupModal = ({ isOpen, onClose, onSave }) => {
             required
           />
         </div>
-        <div className="form-group">
-          <label className="form-label">Color</label>
-          <input
-            type="color"
-            className="form-input"
-            value={groupData.color}
-            onChange={(e) => setGroupData({ ...groupData, color: e.target.value })}
-          />
-        </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-cancel" onClick={onClose}>
             Cancel
@@ -343,6 +334,8 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }) => {
     defaultOpacity: settings?.defaultOpacity || 0.8,
     defaultAlwaysOnTop: settings?.defaultAlwaysOnTop || true
   });
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const colorPickerRef = useRef(null);
 
   // Update local state when modal opens
   useEffect(() => {
@@ -352,6 +345,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }) => {
         defaultOpacity: settings.defaultOpacity || 0.8,
         defaultAlwaysOnTop: settings.defaultAlwaysOnTop || true
       });
+      setShowColorPicker(false);
     }
   }, [isOpen, settings]);
 
@@ -366,49 +360,108 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }) => {
     setSettingsData({ ...settingsData, defaultBackgroundColor: newColor });
   };
 
+  const toggleColorPicker = (e) => {
+    e.stopPropagation();
+    setShowColorPicker(!showColorPicker);
+  };
+
+  // Close color picker when clicking outside
+  const handleClickOutside = (e) => {
+    if (showColorPicker && colorPickerRef.current && !colorPickerRef.current.contains(e.target)) {
+      setShowColorPicker(false);
+    }
+  };
+
+  // Add click listener when color picker is open
+  useEffect(() => {
+    if (showColorPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showColorPicker]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Default Settings for New Notes">
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Default Background Color</label>
-          <ColorPicker
-            value={settingsData.defaultBackgroundColor}
-            onChange={handleColorChange}
-            width={450}
-            height={200}
-            hideInputs={false}
-            hideEyeDrop={false}
-            hideAdvancedSliders={false}
-            hideColorGuide={true}
-            hideInputType={false}
-            hideGradientType={true}
-            hideGradientAngle={true}
-            hideGradientStop={true}
-            hideGradientControls={true}
-            hideColorTypeBtns={true}
-            presets={[
-              'rgba(255, 235, 59, 1.0)',
-              'rgba(255, 193, 7, 1.0)',
-              'rgba(255, 152, 0, 1.0)',
-              'rgba(255, 87, 34, 1.0)',
-              'rgba(244, 67, 54, 1.0)',
-              'rgba(233, 30, 99, 1.0)',
-              'rgba(156, 39, 176, 1.0)',
-              'rgba(103, 58, 183, 1.0)',
-              'rgba(63, 81, 181, 1.0)',
-              'rgba(33, 150, 243, 1.0)',
-              'rgba(3, 169, 244, 1.0)',
-              'rgba(0, 188, 212, 1.0)',
-              'rgba(0, 150, 136, 1.0)',
-              'rgba(76, 175, 80, 1.0)',
-              'rgba(139, 195, 74, 1.0)',
-              'rgba(205, 220, 57, 1.0)',
-              'rgba(158, 158, 158, 1.0)',
-              'rgba(96, 125, 139, 1.0)'
-            ]}
-          />
+          <div ref={colorPickerRef} className="color-picker-container" style={{ position: 'relative' }}>
+            <div
+              onClick={toggleColorPicker}
+              style={{
+                width: '50px',
+                height: '30px',
+                backgroundColor: settingsData.defaultBackgroundColor,
+                border: '2px solid #ddd',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                color: '#666'
+              }}
+              title="Click to open color picker"
+            >
+              {showColorPicker ? '▼' : '▲'}
+            </div>
+            {showColorPicker && (
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                style={{ 
+                  position: 'absolute', 
+                  top: '35px', 
+                  left: '0', 
+                  zIndex: 1000,
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  padding: '10px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                }}>
+                <ColorPicker
+                  value={settingsData.defaultBackgroundColor}
+                  onChange={handleColorChange}
+                  width={300}
+                  height={200}
+                  hideInputs={false}
+                  hideEyeDrop={false}
+                  hideAdvancedSliders={false}
+                  hideColorGuide={true}
+                  hideInputType={false}
+                  hideGradientType={true}
+                  hideGradientAngle={true}
+                  hideGradientStop={true}
+                  hideGradientControls={true}
+                  hideColorTypeBtns={true}
+                  presets={[
+                    'rgba(255, 235, 59, 1.0)',
+                    'rgba(255, 193, 7, 1.0)',
+                    'rgba(255, 152, 0, 1.0)',
+                    'rgba(255, 87, 34, 1.0)',
+                    'rgba(244, 67, 54, 1.0)',
+                    'rgba(233, 30, 99, 1.0)',
+                    'rgba(156, 39, 176, 1.0)',
+                    'rgba(103, 58, 183, 1.0)',
+                    'rgba(63, 81, 181, 1.0)',
+                    'rgba(33, 150, 243, 1.0)',
+                    'rgba(3, 169, 244, 1.0)',
+                    'rgba(0, 188, 212, 1.0)',
+                    'rgba(0, 150, 136, 1.0)',
+                    'rgba(76, 175, 80, 1.0)',
+                    'rgba(139, 195, 74, 1.0)',
+                    'rgba(205, 220, 57, 1.0)',
+                    'rgba(158, 158, 158, 1.0)',
+                    'rgba(96, 125, 139, 1.0)'
+                  ]}
+                />
+              </div>
+            )}
+          </div>
           <small style={{ color: '#666', fontSize: '12px' }}>
-            This color will be used for all new notes by default. Use the eyedropper 👁️ to pick colors from your screen!
+            This color will be used for all new notes by default. Click the color box to open the picker!
           </small>
         </div>
         
@@ -954,9 +1007,7 @@ const Dashboard = () => {
                   <div key={item.id} className="note-card trash-note">
                     <div className="note-card-header">
                       <div className="note-title">
-                        {item.data.content 
-                          ? (item.data.content.split('\n')[0].substring(0, 50) + (item.data.content.split('\n')[0].length > 50 ? '...' : ''))
-                          : 'Empty note...'}
+                        {getFirstLine(item.data.content)}
                       </div>
                       <div className="note-actions">
                         <button
@@ -976,7 +1027,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="note-content">
-                      {item.data.content ? item.data.content.substring(0, 200) + (item.data.content.length > 200 ? '...' : '') : 'Click to start typing...'}
+                      {getTextPreview(item.data.content, 200)}
                     </div>
                     <div className="note-meta">
                       {group && (

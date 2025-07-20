@@ -66,7 +66,7 @@ const customStyles = `
     }
     
     .ql-editor {
-        padding: 16px !important;
+        padding: 2px 12px !important;
         font-size: 14px !important;
         line-height: 1.6 !important;
     }
@@ -131,6 +131,7 @@ const NoteQuill = () => {
     const noteContainerRef = useRef(null);
     const settingsPanelRef = useRef(null);
     const quillRef = useRef(null);
+    const currentNoteRef = useRef(null);
     const editorRef = useRef(null);
     
     console.log('NoteQuill component state:', { showSettings, currentNote: !!currentNote });
@@ -194,33 +195,25 @@ const NoteQuill = () => {
             // Set initial window focus state
             setIsWindowFocused(document.hasFocus());
             
-            // Quill configuration with all tools
-            const toolbarOptions = [
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'color': [] }],
-                ['link'],
-                ['strike'],
-                ['blockquote', 'code-block'],
-                [{ 'header': 1 }, { 'header': 2 }],
-                [{ 'script': 'sub'}, { 'script': 'super' }],
-                [{ 'indent': '-1'}, { 'indent': '+1' }],
-                [{ 'direction': 'rtl' }],
-                [{ 'size': ['small', false, 'large', 'huge'] }],
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                [{ 'background': [] }],
-                [{ 'font': [] }],
-                [{ 'align': [] }],
-                ['clean'],
-                ['image', 'video']
-            ];
-
+            // Quill configuration with simplified toolbar
             const quill = new Quill(editorRef.current, {
                 theme: 'snow',
                 modules: {
-                    toolbar: {
-                        container: toolbarOptions
-                    },
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link'],
+                        ['strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['image', 'video']
+                    ],
                     clipboard: {
                         matchVisual: false
                     }
@@ -352,6 +345,40 @@ const NoteQuill = () => {
             noteContainerRef.current.style.color = textColor;
         }
     }, [backgroundColor]);
+
+    // Update ref when currentNote changes
+    useEffect(() => {
+        currentNoteRef.current = currentNote;
+    }, [currentNote]);
+
+    // Enhanced animation when collapsed
+    useEffect(() => {
+        if (noteContainerRef.current) {
+            if (currentNote && currentNote.isCollapsed) {
+                // Collapse animation with easing
+                noteContainerRef.current.style.transition = 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease';
+                noteContainerRef.current.style.height = '14px';
+                
+                // Add a subtle opacity effect for the content
+                const editorContainer = noteContainerRef.current.querySelector('.ql-container');
+                if (editorContainer) {
+                    editorContainer.style.transition = 'opacity 0.3s ease';
+                    editorContainer.style.opacity = '0';
+                }
+            } else if (noteContainerRef.current) {
+                // Expand animation with easing
+                noteContainerRef.current.style.transition = 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease';
+                noteContainerRef.current.style.height = '100vh';
+                
+                // Restore opacity for the content
+                const editorContainer = noteContainerRef.current.querySelector('.ql-container');
+                if (editorContainer) {
+                    editorContainer.style.transition = 'opacity 0.3s ease';
+                    editorContainer.style.opacity = '1';
+                }
+            }
+        }
+    }, [currentNote?.isCollapsed]);
 
     // Auto-save functionality
     const saveNote = useCallback(async () => {
@@ -510,6 +537,7 @@ const NoteQuill = () => {
         };
 
         const handleCollapseStateChange = (noteId, isCollapsed) => {
+            const currentNote = currentNoteRef.current;
             if (currentNote && currentNote.id === noteId) {
                 console.log(`Received collapse state change for note ${noteId}: ${isCollapsed}`);
                 setCurrentNote(prev => prev ? { ...prev, isCollapsed } : null);
@@ -520,16 +548,18 @@ const NoteQuill = () => {
         window.addEventListener('beforeunload', handleBeforeUnload);
         window.addEventListener('focus', handleFocus);
         window.addEventListener('blur', handleBlur);
-        window.electronAPI.onCollapseStateChange(handleCollapseStateChange);
+        const removeCollapseListener = window.electronAPI.onCollapseStateChange(handleCollapseStateChange);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             window.removeEventListener('beforeunload', handleBeforeUnload);
             window.removeEventListener('focus', handleFocus);
             window.removeEventListener('blur', handleBlur);
-            // Note: IPC listeners are automatically cleaned up when the window is closed
+            if (removeCollapseListener) {
+                removeCollapseListener();
+            }
         };
-    }, [currentNote, saveNote]);
+    }, [saveNote]);
 
 
 
@@ -627,7 +657,7 @@ const NoteQuill = () => {
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
                         title={showAdvancedTools ? 'Hide Advanced Tools' : 'Show Advanced Tools'}
                     >
-                        {showAdvancedTools ? '▼' : '▲'}
+                        🔧
                     </button>
                     
                     <button
@@ -648,6 +678,7 @@ const NoteQuill = () => {
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+                        title={currentNote.isCollapsed ? 'Expand Note' : 'Collapse Note'}
                     >
                         {currentNote.isCollapsed ? '▽' : '△'}
                     </button>
@@ -670,6 +701,7 @@ const NoteQuill = () => {
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+                        title="Settings"
                     >
                         ⋯
                     </button>
@@ -693,6 +725,7 @@ const NoteQuill = () => {
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
                         onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+                        title="Close Note"
                     >
                         ×
                     </button>

@@ -12,11 +12,23 @@ export default defineConfig({
     rollupOptions: {
       input: {
         dashboard: resolve(__dirname, 'src/renderer/dashboard.html'),
-        note: resolve(__dirname, 'src/renderer/note-react.html'),
+        'note-quill': resolve(__dirname, 'src/renderer/note-quill.html'),
       },
+      output: {
+        manualChunks: undefined,
+      },
+      treeshake: false,
     },
+    minify: 'esbuild',
+    target: 'esnext',
   },
   server: {
     port: 5177,
   },
+  optimizeDeps: {
+    include: ['react', 'react-dom']
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
+  }
 }) 

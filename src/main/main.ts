@@ -576,7 +576,10 @@ ipcMain.handle('collapse-all-notes', () => {
     note.updatedAt = Date.now()
     const window = noteWindows.get(note.id)
     if (window) {
-      window.setSize(note.size.width, 30) // Collapsed height
+      // Delay to match React animation
+      setTimeout(() => {
+        window.setSize(note.size.width, 14) // Collapsed height for note-quill
+      }, 400)
     }
   })
   store.set('notes', notes)
@@ -593,7 +596,8 @@ ipcMain.handle('show-dashboard', () => {
 
 ipcMain.handle('close-dashboard', () => {
   if (dashboardWindow) {
-    dashboardWindow.hide()
+    dashboardWindow.close()
+    dashboardWindow = null
   }
 })
 
@@ -656,11 +660,17 @@ ipcMain.handle('toggle-window-collapse', (event, noteId: string, isCollapsed: bo
       store.set('notes', notes)
       
       if (isCollapsed) {
-        // Collapse: set height to 30px (title bar only)
-        window.setSize(note.size.width, 30)
+        // Collapse: set height to 14px (title bar only for note-quill)
+        // Delay to match React animation
+        setTimeout(() => {
+          window.setSize(note.size.width, 14)
+        }, 400) // Match the 0.4s React animation
       } else {
         // Expand: restore original height
-        window.setSize(note.size.width, note.size.height)
+        // Delay to match React animation
+        setTimeout(() => {
+          window.setSize(note.size.width, note.size.height)
+        }, 400) // Match the 0.4s React animation
       }
       
       console.log(`Window ${noteId} ${isCollapsed ? 'collapsed' : 'expanded'}`)
@@ -760,6 +770,14 @@ function calculateMousePosition(windowSize: { width: number; height: number }): 
 
 // App event handlers
 app.whenReady().then(() => {
+  // Set up single instance behavior
+  const gotTheLock = app.requestSingleInstanceLock()
+
+  if (!gotTheLock) {
+    console.log('Another instance is running, quitting...')
+    app.quit()
+    return
+  }
   // Register application shortcuts (not global)
   // These will only work when the app is focused
 
@@ -908,6 +926,42 @@ app.whenReady().then(() => {
         { label: 'Close', accelerator: 'CmdOrCtrl+W', role: 'close' },
         { type: 'separator' },
         { 
+          label: 'New Note', 
+          accelerator: 'CmdOrCtrl+N',
+          click: () => {
+            console.log('Menu shortcut: Create New Note');
+            
+            // Calculate position at mouse cursor
+            const defaultSize = { width: 300, height: 270 };
+            const smartPosition = calculateMousePosition(defaultSize);
+
+            const currentSettings = store.get('settings');
+            const newNote: Note = {
+              id: uuidv4(),
+              content: '',
+              backgroundColor: currentSettings.defaultBackgroundColor,
+              opacity: 0.8, // Default to 80% opacity
+              clickThrough: false,
+              alwaysOnTop: currentSettings.defaultAlwaysOnTop,
+              position: smartPosition,
+              size: defaultSize,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              isCollapsed: false,
+              isVisible: true,
+            }
+            
+            console.log(`Creating new note with ID: ${newNote.id}`);
+
+            const notes = store.get('notes')
+            notes.push(newNote)
+            store.set('notes', notes)
+
+            // Create the note window
+            createNoteWindow(newNote)
+          }
+        },
+        { 
           label: 'Open Dashboard', 
           accelerator: 'CmdOrCtrl+Shift+D',
           click: () => {
@@ -935,7 +989,10 @@ app.whenReady().then(() => {
               note.updatedAt = Date.now();
               const window = noteWindows.get(note.id);
               if (window) {
-                window.setSize(note.size.width, 30); // Collapsed height
+                // Delay to match React animation
+                setTimeout(() => {
+                  window.setSize(note.size.width, 14); // Collapsed height for note-quill
+                }, 400);
                 // Send IPC message to trigger React re-render
                 window.webContents.send('note-collapse-state-changed', note.id, true);
               }
@@ -1005,7 +1062,10 @@ app.whenReady().then(() => {
               
               const window = noteWindows.get(note.id);
               if (window) {
-                window.setSize(note.size.width, 30); // Collapsed height
+                // Delay to match React animation
+                setTimeout(() => {
+                  window.setSize(note.size.width, 14); // Collapsed height for note-quill
+                }, 400);
                 window.setPosition(startX, newY);
                 // Send IPC message to trigger React re-render
                 window.webContents.send('note-collapse-state-changed', note.id, true);
@@ -1040,9 +1100,15 @@ app.whenReady().then(() => {
                   
                   // Restore window size based on collapsed state
                   if (wasCollapsed) {
-                    window.setSize(note.size.width, 30); // Collapsed height
+                    // Delay to match React animation
+                    setTimeout(() => {
+                      window.setSize(note.size.width, 14); // Collapsed height for note-quill
+                    }, 400);
                   } else {
-                    window.setSize(note.size.width, note.size.height);
+                    // Delay to match React animation
+                    setTimeout(() => {
+                      window.setSize(note.size.width, note.size.height);
+                    }, 400);
                   }
                   
                   // Send IPC message to trigger React re-render
@@ -1062,8 +1128,20 @@ app.whenReady().then(() => {
   Menu.setApplicationMenu(menu)
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createDashboardWindow()
+    // When dock icon is clicked, bring note windows to front (but not dashboard)
+    console.log('Dock icon clicked - bringing note windows to front');
+    const allWindows = BrowserWindow.getAllWindows();
+    const noteWindows = allWindows.filter(window => !window.isDestroyed() && window !== dashboardWindow);
+    
+    if (noteWindows.length > 0) {
+      noteWindows.forEach(window => {
+        window.show();
+      });
+      // Focus the first available note window
+      const firstNoteWindow = noteWindows[0];
+      if (firstNoteWindow) {
+        firstNoteWindow.focus();
+      }
     }
   })
 })
@@ -1071,6 +1149,24 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+  }
+})
+
+// Additional handler for macOS dock icon clicks
+app.on('second-instance', () => {
+  console.log('Second instance attempted - bringing note windows to front');
+  const allWindows = BrowserWindow.getAllWindows();
+  const noteWindows = allWindows.filter(window => !window.isDestroyed() && window !== dashboardWindow);
+  
+  if (noteWindows.length > 0) {
+    noteWindows.forEach(window => {
+      window.show();
+    });
+    // Focus the first available note window
+    const firstNoteWindow = noteWindows[0];
+    if (firstNoteWindow) {
+      firstNoteWindow.focus();
+    }
   }
 })
 

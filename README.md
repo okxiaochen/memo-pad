@@ -1,8 +1,23 @@
 # MemoPad - Enhanced Sticky Notes for macOS
 
-![MemoPad Logo](https://via.placeholder.com/150x50/667eea/ffffff?text=MemoPad)
 
 MemoPad is a powerful, modern alternative to the built-in macOS Stickies app. It provides floating notes with advanced window management, group organization, and a beautiful dashboard interface.
+
+## 📸 Screenshots
+
+![MemoPad Dashboard](docs/pic1.jpg)
+*Dashboard with grouped notes and trash management*
+
+![MemoPad Note Interface](docs/pic2.jpg)
+*Floating note with Quill editor and settings panel*
+
+## 📦 Downloads
+
+- **Latest Release**: [GitHub Releases](https://github.com/youruser/markies/releases/latest)
+- **Apple Silicon DMG**: Optimized for M1/M2/M3 MacBooks
+- **Source Code**: Clone the repository for development
+- Since it’s developed with Electron, it should theoretically support all platforms, but I haven’t tested it on others.
+
 
 ## ✨ Features
 
@@ -41,11 +56,20 @@ MemoPad is a powerful, modern alternative to the built-in macOS Stickies app. It
 
 ## 🚀 Installation
 
-### Prerequisites
+### Quick Download (Recommended)
+
+**For Apple Silicon MacBooks (M1/M2/M3):**
+- Download the latest DMG from [GitHub Releases](https://github.com/youruser/markies/releases/latest)
+- Open the DMG file and drag MemoPad to your Applications folder
+- Launch MemoPad from Applications
+
+### Manual Build
+
+#### Prerequisites
 - macOS 10.14 or later
 - Node.js 18+ and npm
 
-### Setup Instructions
+#### Setup Instructions
 
 1. **Clone the repository:**
    ```bash
@@ -217,7 +241,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📧 Support
 
 If you encounter any issues or have feature requests, please:
-1. Check the [Issues](https://github.com/youruser/markies/issues) page
+1. Check the [Issues](https://github.com/okxiaochen/memo-pad/releases) page
 2. Create a new issue if needed
 3. Provide detailed information about your system and the problem
 

@@ -913,6 +913,10 @@ const Note = () => {
                             opacity: 1.0,
                         });
                         setCurrentNote(newNote);
+                        setContent(newNote.content);
+                        setBackgroundColor(newNote.backgroundColor);
+                        setOpacity(newNote.opacity);
+                        setAlwaysOnTop(newNote.alwaysOnTop);
                     }
                 } else {
                     // No note ID in URL, create a new note
@@ -923,6 +927,10 @@ const Note = () => {
                         opacity: 1.0,
                     });
                     setCurrentNote(newNote);
+                    setContent(newNote.content);
+                    setBackgroundColor(newNote.backgroundColor);
+                    setOpacity(newNote.opacity);
+                    setAlwaysOnTop(newNote.alwaysOnTop);
                 }
                 
                 console.log('Note initialization complete');
