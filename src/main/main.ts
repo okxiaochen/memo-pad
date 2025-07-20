@@ -242,6 +242,20 @@ ipcMain.handle('get-settings', () => {
   return store.get('settings')
 })
 
+ipcMain.handle('update-settings', (event, key: keyof { defaultBackgroundColor: string; defaultOpacity: number; defaultAlwaysOnTop: boolean }, value: string | number | boolean) => {
+  const settings = store.get('settings')
+  if (key === 'defaultBackgroundColor' && typeof value === 'string') {
+    settings.defaultBackgroundColor = value
+  } else if (key === 'defaultOpacity' && typeof value === 'number') {
+    settings.defaultOpacity = value
+  } else if (key === 'defaultAlwaysOnTop' && typeof value === 'boolean') {
+    settings.defaultAlwaysOnTop = value
+  }
+  store.set('settings', settings)
+  console.log(`Settings updated: ${key} = ${value}`)
+  return settings
+})
+
 ipcMain.handle('create-note', (event, noteData: Partial<Note>) => {
   // Debug: check current settings
   const currentSettings = store.get('settings');

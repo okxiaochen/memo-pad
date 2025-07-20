@@ -100,6 +100,23 @@ const hexToRgba = (hex, opacity = 1.0) => {
     return hex;
 };
 
+const rgbaToHex = (rgba) => {
+    // Extract RGB values from rgba string
+    const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+    if (match) {
+        const r = parseInt(match[1], 10);
+        const g = parseInt(match[2], 10);
+        const b = parseInt(match[3], 10);
+        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+    // If it's already hex, return as is
+    if (rgba.startsWith('#')) {
+        return rgba;
+    }
+    // Fallback
+    return '#ffeb3b';
+};
+
 const NoteQuill = () => {
     console.log('NoteQuill component initialized');
     const [currentNote, setCurrentNote] = useState(null);
@@ -711,7 +728,7 @@ const NoteQuill = () => {
                         </label>
                         <input
                             type="color"
-                            value={backgroundColor.startsWith('#') ? backgroundColor : '#ffeb3b'}
+                            value={rgbaToHex(backgroundColor)}
                             onChange={handleColorChange}
                             style={{
                                 width: '100%',

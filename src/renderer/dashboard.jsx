@@ -183,19 +183,25 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 };
 
 // Create Note Modal
-const CreateNoteModal = ({ isOpen, onClose, onSave, groups }) => {
+const CreateNoteModal = ({ isOpen, onClose, onSave, groups, settings }) => {
   const [noteData, setNoteData] = useState({
     title: '',
     content: '',
-          backgroundColor: 'rgba(255, 235, 59, 1.0)',
-    opacity: 1.0,
+    backgroundColor: settings?.defaultBackgroundColor || 'rgba(255, 235, 59, 1.0)',
+    opacity: settings?.defaultOpacity || 0.8,
     groupId: ''
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSave(noteData);
-    setNoteData({ title: '', content: '', backgroundColor: 'rgba(255, 235, 59, 1.0)', opacity: 1.0, groupId: '' });
+    setNoteData({ 
+      title: '', 
+      content: '', 
+      backgroundColor: settings?.defaultBackgroundColor || 'rgba(255, 235, 59, 1.0)', 
+      opacity: settings?.defaultOpacity || 0.8, 
+      groupId: '' 
+    });
     onClose();
   };
 
@@ -329,33 +335,152 @@ const CreateGroupModal = ({ isOpen, onClose, onSave }) => {
   );
 };
 
+// Settings Modal
+const SettingsModal = ({ isOpen, onClose, settings, onSave }) => {
+  const [settingsData, setSettingsData] = useState({
+    defaultBackgroundColor: settings?.defaultBackgroundColor || 'rgba(255, 235, 59, 1.0)',
+    defaultOpacity: settings?.defaultOpacity || 0.8,
+    defaultAlwaysOnTop: settings?.defaultAlwaysOnTop || true
+  });
 
+  // Update local state when modal opens
+  useEffect(() => {
+    if (isOpen && settings) {
+      setSettingsData({
+        defaultBackgroundColor: settings.defaultBackgroundColor || 'rgba(255, 235, 59, 1.0)',
+        defaultOpacity: settings.defaultOpacity || 0.8,
+        defaultAlwaysOnTop: settings.defaultAlwaysOnTop || true
+      });
+    }
+  }, [isOpen, settings]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(settingsData);
+    onClose();
+  };
+
+  const handleColorChange = (e) => {
+    const newHexColor = e.target.value;
+    const newRgbaColor = hexToRgba(newHexColor, 1.0);
+    setSettingsData({ ...settingsData, defaultBackgroundColor: newRgbaColor });
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Default Settings for New Notes">
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="form-label">Default Background Color</label>
+          <input
+            type="color"
+            className="form-input"
+            value={rgbaToHex(settingsData.defaultBackgroundColor)}
+            onChange={handleColorChange}
+            style={{
+              width: '100%',
+              height: '40px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          />
+          <small style={{ color: '#666', fontSize: '12px' }}>
+            This color will be used for all new notes by default
+          </small>
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">
+            Default Opacity: {Math.round(settingsData.defaultOpacity * 100)}%
+          </label>
+          <input
+            type="range"
+            className="form-input"
+            min="0.5"
+            max="1"
+            step="0.01"
+            value={settingsData.defaultOpacity}
+            onChange={(e) => {
+              const newOpacity = parseFloat(e.target.value);
+              setSettingsData({ ...settingsData, defaultOpacity: newOpacity });
+            }}
+            style={{
+              width: '100%',
+              height: '6px',
+              borderRadius: '3px',
+              background: '#ddd',
+              outline: 'none'
+            }}
+          />
+          <small style={{ color: '#666', fontSize: '12px' }}>
+            This opacity will be applied to all new notes by default
+          </small>
+        </div>
+
+        <div className="form-group">
+          <div className="settings-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="checkbox"
+              id="defaultAlwaysOnTop"
+              className="form-input"
+              checked={settingsData.defaultAlwaysOnTop}
+              onChange={(e) => setSettingsData({ ...settingsData, defaultAlwaysOnTop: e.target.checked })}
+              style={{ width: 'auto' }}
+            />
+            <label htmlFor="defaultAlwaysOnTop" className="form-label" style={{ margin: 0 }}>
+              Always on Top by Default
+            </label>
+          </div>
+          <small style={{ color: '#666', fontSize: '12px' }}>
+            New notes will stay on top of other windows by default
+          </small>
+        </div>
+
+        <div className="modal-actions">
+          <button type="button" className="btn btn-cancel" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-success">
+            Save Settings
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
 
 // Main Dashboard Component
 const Dashboard = () => {
   const [notes, setNotes] = useState([]);
   const [groups, setGroups] = useState([]);
   const [trash, setTrash] = useState([]);
+  const [settings, setSettings] = useState({
+    defaultBackgroundColor: 'rgba(255, 235, 59, 1.0)',
+    defaultOpacity: 0.8,
+    defaultAlwaysOnTop: true
+  });
 
   const [loading, setLoading] = useState(true);
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [draggedNote, setDraggedNote] = useState(null);
   const [dragOverGroup, setDragOverGroup] = useState(null);
 
   // Load data
   useEffect(() => {
     loadData();
+    loadSettings(); // Load settings only once on mount
     
     // Add window focus listener to refresh data when dashboard comes back into focus
     const handleFocus = () => {
       console.log('Dashboard window focused, refreshing data...');
-      loadData();
+      loadData(); // Only reload notes/groups/trash, not settings
     };
     
     // Set up periodic refresh every 3 seconds to catch updates from note windows
     const refreshInterval = setInterval(() => {
-      loadData();
+      loadData(); // Only reload notes/groups/trash, not settings
     }, 3000);
     
     window.addEventListener('focus', handleFocus);
@@ -387,14 +512,25 @@ const Dashboard = () => {
     }
   };
 
+  const loadSettings = async () => {
+    try {
+      console.log('Loading settings...');
+      const settingsData = await window.electronAPI.getSettings();
+      setSettings(settingsData);
+      console.log('Settings loaded:', settingsData);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
+  };
+
   const handleCreateNote = async (noteData = null) => {
     try {
-      // Use defaults if no noteData provided
+      // Use default settings if no noteData provided
       const defaultNoteData = {
         content: '',
-        backgroundColor: 'rgba(255, 235, 59, 1.0)', // Yellow
-        opacity: 0.8, // 80% opacity (default)
-        alwaysOnTop: true,
+        backgroundColor: settings.defaultBackgroundColor,
+        opacity: settings.defaultOpacity,
+        alwaysOnTop: settings.defaultAlwaysOnTop,
         clickThrough: false,
       };
       
@@ -441,6 +577,21 @@ const Dashboard = () => {
       loadData();
     } catch (error) {
       console.error('Failed to create group:', error);
+    }
+  };
+
+  const handleSaveSettings = async (newSettings) => {
+    try {
+      // Update each setting individually
+      await window.electronAPI.updateSettings('defaultBackgroundColor', newSettings.defaultBackgroundColor);
+      await window.electronAPI.updateSettings('defaultOpacity', newSettings.defaultOpacity);
+      await window.electronAPI.updateSettings('defaultAlwaysOnTop', newSettings.defaultAlwaysOnTop);
+      
+      // Reload settings from storage to ensure consistency
+      await loadSettings();
+      console.log('Settings saved:', newSettings);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
     }
   };
 
@@ -658,6 +809,14 @@ const Dashboard = () => {
           </button>
           <button 
             className="btn btn-secondary" 
+            onClick={() => setShowSettingsModal(true)}
+            title="Configure default settings"
+          >
+            <Icons.Settings />
+            Settings
+          </button>
+          <button 
+            className="btn btn-secondary" 
             onClick={handleCloseDashboard}
             title="Close dashboard"
           >
@@ -820,11 +979,18 @@ const Dashboard = () => {
         onClose={() => setShowCreateNoteModal(false)}
         onSave={handleCreateNoteWithModal}
         groups={groups}
+        settings={settings}
       />
       <CreateGroupModal
         isOpen={showCreateGroupModal}
         onClose={() => setShowCreateGroupModal(false)}
         onSave={handleCreateGroup}
+      />
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        settings={settings}
+        onSave={handleSaveSettings}
       />
 
     </div>

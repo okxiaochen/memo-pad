@@ -89,6 +89,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Settings
   getSettings: (): Promise<Settings> => ipcRenderer.invoke('get-settings'),
+  updateSettings: (key: string, value: string | number | boolean): Promise<Settings> => ipcRenderer.invoke('update-settings', key, value),
 
   // Window opacity control
   setWindowOpacity: (opacity: number): void => ipcRenderer.send('set-window-opacity', opacity),
